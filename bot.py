@@ -7,16 +7,16 @@ from telegram.ext import (
     ContextTypes,
     filters
 )
-from datetime import time, datetime, timedelta
+from datetime import time
 import pytz
 import os
 
-TOKEN = "8336806635:AAGxCKCck2GiF5Wiy2W1ONhAvUfbkmoHL4M"
-# чтобы бот писал только тебе — просто оставь этот chat_id после первого /start
+TOKEN = os.getenv("8336806635:AAGxCKCck2GiF5Wiy2W1ONhAvUfbkmoHL4M")
 CHAT_ID = None
 
 TEXT = "любимая ты меня любишь? 🥹"
-REMINDER_TIME = {"hour": 13, "minute": 50}
+REMINDER_HOUR = 13
+REMINDER_MINUTE = 50
 
 love_counter = 0
 pending_message_id = None
@@ -38,7 +38,6 @@ async def send_message(context: ContextTypes.DEFAULT_TYPE):
 
     pending_message_id = msg.message_id
 
-    # Запускаем повтор через 10 минут
     context.job_queue.run_once(remind_again, 600)
 
 
@@ -57,24 +56,28 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "Теперь я буду спрашивать тебя каждый день 🤍\n"
-        "Введи время так: 13:50"
+        "Если хочешь изменить время — напиши его так: 13:50"
     )
 
 
 async def set_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global REMINDER_TIME
+    global REMINDER_HOUR, REMINDER_MINUTE
 
     try:
-        user_time = update.message.text.strip()
-        h, m = map(int, user_time.split(":"))
-        REMINDER_TIME = {"hour": h, "minute": m}
+        t = update.message.text.strip()
+        h, m = map(int, t.split(":"))
+        REMINDER_HOUR = h
+        REMINDER_MINUTE = m
+
+        for job in context.job_queue.jobs():
+            job.schedule_removal()
 
         context.job_queue.run_daily(
             send_message,
             time=time(hour=h, minute=m, tzinfo=tz)
         )
 
-        await update.message.reply_text(f"Теперь я буду писать каждый день в {user_time} ❤️")
+        await update.message.reply_text(f"Теперь я буду писать каждый день в {t} ❤️")
 
     except:
         await update.message.reply_text("Напиши время в формате ЧЧ:ММ 😊")
@@ -89,8 +92,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     love_counter += 1
     pending_message_id = None
 
-    await query.edit_message_text(f"я тоже тебя люблю 🤍\n"
-                                  f"ты сказала это уже {love_counter} раз(а) 🥹")
+    await query.edit_message_text(
+        f"я тоже тебя люблю 🤍\n"
+        f"ты сказала это уже {love_counter} раз(а) 🥹"
+    )
 
 
 def main():
@@ -102,11 +107,11 @@ def main():
 
     app.job_queue.run_daily(
         send_message,
-        time=time(hour=REMINDER_TIME["hour"], minute=REMINDER_TIME["minute"], tzinfo=tz)
+        time=time(hour=REMINDER_HOUR, minute=REMINDER_MINUTE, tzinfo=tz)
     )
 
     app.run_polling()
 
 
-if __name__ == "__main__":
+if __name__ == "main":
     main()
