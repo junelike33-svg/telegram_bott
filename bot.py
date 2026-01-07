@@ -37,7 +37,6 @@ async def send_message(context: ContextTypes.DEFAULT_TYPE):
     )
 
     pending_message_id = msg.message_id
-
     context.job_queue.run_once(remind_again, 600)
 
 
@@ -78,7 +77,6 @@ async def set_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         await update.message.reply_text(f"Теперь я буду писать каждый день в {t} ❤️")
-
     except:
         await update.message.reply_text("Напиши время в формате ЧЧ:ММ 😊")
 
