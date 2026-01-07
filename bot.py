@@ -11,7 +11,7 @@ from datetime import time
 import pytz
 import os
 
-TOKEN = os.getenv("8336806635:AAGxCKCck2GiF5Wiy2W1ONhAvUfbkmoHL4M")
+TOKEN = os.getenv("TOKEN")
 CHAT_ID = None
 
 TEXT = "любимая ты меня любишь? 🥹"
@@ -113,5 +113,5 @@ def main():
     app.run_polling()
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     main()
